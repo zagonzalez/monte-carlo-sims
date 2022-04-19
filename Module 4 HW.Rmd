@@ -1,0 +1,132 @@
+---
+title: "Module 4 HW"
+author: "Zachary Gonzalez"
+date: "2/9/2022"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+QUESTION: Suppose that for certain microRNA of size 20 the probability of a purine is 
+binomially distributed with probability 0.7. Say there are 100 such microRNAs, 
+each independent of the other.  
+ 
+Let Y denote the average number of purine in these microRNAs. Find the 
+probability that Y is great than 15. Please give a theoretical calculation, do NOT 
+use Monte Carlo simulation to approximate. Show all the steps and formulas in 
+your calculation. 
+
+Use a binomial distribution and central limit theorem 
+
+```{r}
+n = 20
+p = 0.7
+m = n * p 
+v = n * p * (1-p)
+m
+v
+1-pnorm(15,m,sd=sqrt(v)/sqrt(100))
+```
+
+QUESTION: Two genes’ expression values follow a bivariate normal distribution. Let X and Y 
+denote their expression values respectively. Also, assume that X has mean=9 and 
+variance=3.Y has mean=10 and variance=5. The covariance between X and Y is 2.  
+ 
+In a trial, 50 independent measurements of the expression values of the two genes 
+are collected, and denoted as , ...,  . We wish to find the 
+probability , i.e., the probability that the sample mean for the 
+second gene exceeds the sample mean of the first gene more than 0.5.  
+ 
+Conduct a Monte Carlo simulation to approximate this probability, providing a 
+95% confidence interval for your estimation. Submit your R script for the Monte 
+Carlo simulation, and a brief summary of the actual simulation results. 
+
+```{r}
+library(MASS)
+require(mvtnorm)
+
+sigma = matrix(c(3, 2, 2, 5), nrow = 2)
+mu = c(9, 10)
+
+success = logical()
+for(i in 1:10000){
+  x = mvrnorm(50, mu, sigma)
+  xbar = mean(x[,1])
+  ybar = mean(x[,2])
+  success[i] = xbar+.5<ybar
+}
+mean(success)
+phat = mean(success)
+se = sqrt(phat*(1-phat)/10000)
+phat + c(-1,1)*qnorm(.975)*se
+prop.test(sum(success), length(success))
+
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+QUESTION: Assume there are three independent random variables ~ , ~ 
+, ~ t-distribution with degrees of freedom m=3.  
+Define a new random variable Y as  (note that the square 
+root is only for X1.)  
+ 
+Use Monte Carlo simulation to find the mean of Y. Submit your R script for the 
+Monte Carlo simulation, and summary of the actual simulation results. 
+
+```{r}
+n = 1000 # Generate 1000 test values 
+X1 = rchisq(n,10)
+X2 = rgamma(n,shape = 1, rate = 2)
+X3 = rt(n,3)
+Y = sqrt((X1*X2)+(4*(X3^2)))
+mean(Y)
+
+```
+
+Running the Monte Carlo simulation 10 times produced average mean values between 3.2 and 3.3 for Y. 
+
+QUESTION: Complete exercise 10 in Chapter 3 of Applied Statistics for Bioinformatics using R 
+(page 45-46). Submit the plot, and a brief explanation of your observation. 
+The problem refers to the density function of extreme value distribution in another  
+book. You do not have to look for the other book, the density function is  
+ 
+                f(x)=exp(-x)exp(-exp(-x)) 
+ 
+Here exp(-x) is the same as e-x.
+
+```{r}
+set.seed(35646)
+N <- 1000
+n <- 1000
+maxX <- c()
+
+for(i in 1:N){
+    maxX[i] <- max(rnorm(n))
+}
+
+an <- sqrt(2*log(n)) - 0.5*(log(log(n))+log(4*pi))*(2*log(n))^(-1/2)
+bn <- (2*log(n))^(-1/2)
+
+norm_maxX <- (maxX - an)/bn
+# plot(1:1)
+dev.new()
+
+hist(norm_maxX, prob=TRUE,main= "Probability Distribution", ylim=c(0,0.4), col = "green", xlab="x", ylab = "Density")
+
+curve(exp(-x)*exp(-exp(-x)), col = "blue", add=TRUE)
+curve(dnorm(x), col = "red", add=TRUE)
+```
+
